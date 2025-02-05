@@ -2,31 +2,25 @@
 import { Routes, Route, Link } from "react-router-dom";
 import Location from "./components/Location";
 import routes from "./routes"; // Import the routes from routes.js
+import Header from "./components/Header";
+import Footer from "./components/Footer";
 
 function App() {
   return (
-    <div>
-      <nav className="p-4 bg-gray-200">
-        <Link to="/" className="mr-4">
-          Home
-        </Link>
-        <Link to="/profile" className="mr-4">
-          Profile
-        </Link>
-        <Link to="/journal" className="mr-4">
-          Journal
-        </Link>
-      </nav>
-
-      <div>
+    <div className="flex flex-col min-h-screen">
+        <Header />
         <Location />
-      </div>
+      
 
-      <Routes>
+      <Routes className="flex-grow pb-16">
         {routes.map((route, index) => (
           <Route key={index} path={route.path} element={route.element} />
         ))}
       </Routes>
+
+      <div>
+        <Footer />
+      </div>
     </div>
   );
 }
