@@ -1,7 +1,7 @@
+// src/App.jsx
 import { Routes, Route, Link } from "react-router-dom";
-import Home from "./pages/Home";
-import Profile from "./pages/Profile";
 import Location from "./components/Location";
+import routes from "./routes"; // Import the routes from routes.js
 
 function App() {
   return (
@@ -10,17 +10,22 @@ function App() {
         <Link to="/" className="mr-4">
           Home
         </Link>
-        <Link to="/profile">Profile</Link>
+        <Link to="/profile" className="mr-4">
+          Profile
+        </Link>
+        <Link to="/journal" className="mr-4">
+          Journal
+        </Link>
       </nav>
 
       <div>
-        <h1 className="text-2xl font-bold p-4">Allercheck</h1>
         <Location />
       </div>
 
       <Routes>
-        <Route path="/" element={<Home />} />
-        <Route path="/profile" element={<Profile />} />
+        {routes.map((route, index) => (
+          <Route key={index} path={route.path} element={route.element} />
+        ))}
       </Routes>
     </div>
   );
