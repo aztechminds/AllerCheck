@@ -4,6 +4,11 @@ export const getWeatherData = async (lat, lon) => {
   
     try {
       const response = await fetch(url);
+  
+      if (response.status === 429) {
+        throw new Error('Rate limit exceeded. Please try again later.');
+      }
+  
       const data = await response.json();
       return data;
     } catch (error) {
