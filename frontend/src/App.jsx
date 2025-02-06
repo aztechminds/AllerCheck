@@ -1,6 +1,5 @@
-// src/App.jsx
 import { Routes, Route } from "react-router-dom";
-import routes from "./routes"; // Import the routes from routes.js
+import routes from "./routes";
 import Header from "./components/Header";
 import Footer from "./components/Footer";
 import Location from "./components/Location";
@@ -15,8 +14,6 @@ function App() {
       </div>
 
       <main className="flex-grow overflow-y-auto pb-20">
-        {" "}
-        {/* Allow content to scroll */}
         <Routes>
           {routes.map((route, index) => (
             <Route key={index} path={route.path} element={route.element} />
