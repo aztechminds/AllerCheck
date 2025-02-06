@@ -3,6 +3,12 @@ import { useState } from "react";
 export default function AllergyJournal() {
   const [medications, setMedications] = useState([]);
   const [journalEntries, setJournalEntries] = useState([]);
+  const [selectedMonth, setSelectedMonth] = useState(
+    new Date().toISOString().slice(0, 7)
+  ); // Format: YYYY-MM
+  const [selectedDate, setSelectedDate] = useState(
+    new Date().toISOString().slice(0, 10)
+  ); // Format: YYYY-MM-DD
   const [severity, setSeverity] = useState({
     nase: "",
     augen: "",
@@ -12,30 +18,38 @@ export default function AllergyJournal() {
 
   const handleSubmit = (e) => {
     e.preventDefault();
+
     const newEntry = {
       medications,
-      date: new Date().toLocaleString(),
+      date: selectedDate, // Save the selected date
+      month: selectedMonth, // Store based on selected month
       severity,
     };
 
     setJournalEntries([newEntry, ...journalEntries]);
-
     setMedications([]);
     setSeverity({ nase: "", augen: "", lunge: "", haut: "" });
   };
 
   const handleMedicationChange = (e) => {
-    const selectedOptions = Array.from(e.target.selectedOptions, (option) => option.value);
+    const selectedOptions = Array.from(
+      e.target.selectedOptions,
+      (option) => option.value
+    );
     setMedications(selectedOptions);
   };
 
+  const filterEntriesByMonth = journalEntries.filter(
+    (entry) => entry.month === selectedMonth
+  );
+
   const calculateSummary = () => {
-    if (journalEntries.length === 0) return null;
+    if (filterEntriesByMonth.length === 0) return null;
 
     let totalSeverity = { nase: 0, augen: 0, lunge: 0, haut: 0 };
     let count = 0;
 
-    journalEntries.forEach((entry) => {
+    filterEntriesByMonth.forEach((entry) => {
       Object.keys(entry.severity).forEach((key) => {
         totalSeverity[key] += Number(entry.severity[key]);
       });
@@ -55,6 +69,19 @@ export default function AllergyJournal() {
   return (
     <div className="p-4">
       <h2 className="text-xl font-bold mb-6 text-center">Allergy Journal</h2>
+
+      {/* Date Picker */}
+      <div className="mb-4">
+        <label className="block font-semibold">Select Date:</label>
+        <input
+          type="date"
+          value={selectedDate}
+          onChange={(e) => setSelectedDate(e.target.value)}
+          min={`${selectedMonth}-01`} // Ensures the date is within the selected month
+          max={`${selectedMonth}-31`} // Adjusts the max day of the month
+          className="p-2 border rounded w-full"
+        />
+      </div>
 
       <form onSubmit={handleSubmit} className="space-y-4 mb-6">
         <div className="mb-6">
@@ -91,7 +118,9 @@ export default function AllergyJournal() {
             <option value="Inhaler">Inhaler</option>
             <option value="Eye Drops">Eye Drops</option>
           </select>
-          <p className="text-sm text-gray-500">Hold Ctrl (Windows) or Command (Mac) to select multiple.</p>
+          <p className="text-sm text-gray-500">
+            Hold Ctrl (Windows) or Command (Mac) to select multiple.
+          </p>
         </div>
 
         <button
@@ -102,6 +131,18 @@ export default function AllergyJournal() {
         </button>
       </form>
 
+      {/* Month Selector */}
+      <div className="mb-4">
+        <label className="block font-semibold">Select Month:</label>
+        <input
+          type="month"
+          value={selectedMonth}
+          onChange={(e) => setSelectedMonth(e.target.value)}
+          className="p-2 border rounded w-full"
+        />
+      </div>
+
+      {/* Journal Entries Table */}
       <table className="table-auto border-collapse border border-gray-300 w-full">
         <thead>
           <tr>
@@ -114,23 +155,38 @@ export default function AllergyJournal() {
           </tr>
         </thead>
         <tbody>
-          {journalEntries.map((entry, index) => (
+          {filterEntriesByMonth.map((entry, index) => (
             <tr key={index}>
               <td className="border border-gray-300 p-2">{entry.date}</td>
-              <td className="border border-gray-300 p-2">{entry.medications.join(", ")}</td>
-              <td className="border border-gray-300 p-2">{entry.severity.nase}</td>
-              <td className="border border-gray-300 p-2">{entry.severity.augen}</td>
-              <td className="border border-gray-300 p-2">{entry.severity.lunge}</td>
-              <td className="border border-gray-300 p-2">{entry.severity.haut}</td>
+              <td className="border border-gray-300 p-2">
+                {entry.medications.join(", ")}
+              </td>
+              <td className="border border-gray-300 p-2">
+                {entry.severity.nase}
+              </td>
+              <td className="border border-gray-300 p-2">
+                {entry.severity.augen}
+              </td>
+              <td className="border border-gray-300 p-2">
+                {entry.severity.lunge}
+              </td>
+              <td className="border border-gray-300 p-2">
+                {entry.severity.haut}
+              </td>
             </tr>
           ))}
         </tbody>
       </table>
 
+      {/* Monthly Analysis Summary */}
       {summary && (
         <div className="mt-6 p-4 bg-gray-100 rounded-md">
-          <h3 className="text-lg font-bold mb-2">Analysis Summary</h3>
-          <p><strong>Average Severity:</strong></p>
+          <h3 className="text-lg font-bold mb-2">
+            Analysis Summary for {selectedMonth}
+          </h3>
+          <p>
+            <strong>Average Severity:</strong>
+          </p>
           <ul>
             <li>Nase: {summary.nase}</li>
             <li>Augen: {summary.augen}</li>
