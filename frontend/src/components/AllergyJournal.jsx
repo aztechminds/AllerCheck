@@ -1,4 +1,6 @@
 import { useState } from "react";
+import { jsPDF } from "jspdf"; // For PDF export
+import Papa from "papaparse"; // For CSV export
 
 export default function AllergyJournal() {
   const [medications, setMedications] = useState([]);
@@ -21,8 +23,8 @@ export default function AllergyJournal() {
 
     const newEntry = {
       medications,
-      date: selectedDate, // Save the selected date
-      month: selectedMonth, // Store based on selected month
+      date: selectedDate,
+      month: selectedMonth,
       severity,
     };
 
@@ -66,22 +68,49 @@ export default function AllergyJournal() {
 
   const summary = calculateSummary();
 
+  // CSV Export Function
+  const exportCSV = () => {
+    const summaryData = [
+      ["Month", "Nase", "Augen", "Lunge", "Haut"],
+      [selectedMonth, summary.nase, summary.augen, summary.lunge, summary.haut],
+    ];
+
+    const csv = Papa.unparse(summaryData);
+    const blob = new Blob([csv], { type: "text/csv" });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `Allergy_Summary_${selectedMonth}.csv`;
+    a.click();
+    window.URL.revokeObjectURL(url);
+  };
+
+  // PDF Export Function
+  const exportPDF = () => {
+    const doc = new jsPDF();
+    doc.setFontSize(16);
+    doc.text(`Allergy Summary for ${selectedMonth}`, 20, 20);
+    doc.setFontSize(12);
+
+    doc.text(`Nase: ${summary.nase}`, 20, 30);
+    doc.text(`Augen: ${summary.augen}`, 20, 40);
+    doc.text(`Lunge: ${summary.lunge}`, 20, 50);
+    doc.text(`Haut: ${summary.haut}`, 20, 60);
+
+    doc.save(`Allergy_Summary_${selectedMonth}.pdf`);
+  };
+
+  // Simple share functionality (copy to clipboard)
+  const shareSummary = () => {
+    const summaryText = `Allergy Summary for ${selectedMonth}\nNase: ${summary.nase}\nAugen: ${summary.augen}\nLunge: ${summary.lunge}\nHaut: ${summary.haut}`;
+    navigator.clipboard.writeText(summaryText).then(() => {
+      alert("Summary copied to clipboard!");
+    });
+  };
+
   return (
     <div className="p-4">
       <h2 className="text-xl font-bold mb-6 text-center">Allergy Journal</h2>
-
-      {/* Date Picker */}
-      <div className="mb-4">
-        <label className="block font-semibold">Select Date:</label>
-        <input
-          type="date"
-          value={selectedDate}
-          onChange={(e) => setSelectedDate(e.target.value)}
-          min={`${selectedMonth}-01`} // Ensures the date is within the selected month
-          max={`${selectedMonth}-31`} // Adjusts the max day of the month
-          className="p-2 border rounded w-full"
-        />
-      </div>
 
       <form onSubmit={handleSubmit} className="space-y-4 mb-6">
         <div className="mb-6">
@@ -131,8 +160,49 @@ export default function AllergyJournal() {
         </button>
       </form>
 
-      {/* Month Selector */}
-      <div className="mb-4">
+      {/* Journal Entries Table */}
+      <div className="mb-6">
+        <h3 className="text-lg font-semibold mb-4">
+          Journal Entries for {selectedMonth}
+        </h3>
+        <table className="table-auto border-collapse border border-gray-300 w-full">
+          <thead>
+            <tr>
+              <th className="border border-gray-300 p-2">Datum</th>
+              <th className="border border-gray-300 p-2">Medikamente</th>
+              <th className="border border-gray-300 p-2">Nase</th>
+              <th className="border border-gray-300 p-2">Augen</th>
+              <th className="border border-gray-300 p-2">Lunge</th>
+              <th className="border border-gray-300 p-2">Haut</th>
+            </tr>
+          </thead>
+          <tbody>
+            {filterEntriesByMonth.map((entry, index) => (
+              <tr key={index}>
+                <td className="border border-gray-300 p-2">{entry.date}</td>
+                <td className="border border-gray-300 p-2">
+                  {entry.medications.join(", ")}
+                </td>
+                <td className="border border-gray-300 p-2">
+                  {entry.severity.nase}
+                </td>
+                <td className="border border-gray-300 p-2">
+                  {entry.severity.augen}
+                </td>
+                <td className="border border-gray-300 p-2">
+                  {entry.severity.lunge}
+                </td>
+                <td className="border border-gray-300 p-2">
+                  {entry.severity.haut}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      {/* Select Month Moved to Bottom */}
+      <div className="mb-6">
         <label className="block font-semibold">Select Month:</label>
         <input
           type="month"
@@ -141,42 +211,6 @@ export default function AllergyJournal() {
           className="p-2 border rounded w-full"
         />
       </div>
-
-      {/* Journal Entries Table */}
-      <table className="table-auto border-collapse border border-gray-300 w-full">
-        <thead>
-          <tr>
-            <th className="border border-gray-300 p-2">Datum</th>
-            <th className="border border-gray-300 p-2">Medikamente</th>
-            <th className="border border-gray-300 p-2">Nase</th>
-            <th className="border border-gray-300 p-2">Augen</th>
-            <th className="border border-gray-300 p-2">Lunge</th>
-            <th className="border border-gray-300 p-2">Haut</th>
-          </tr>
-        </thead>
-        <tbody>
-          {filterEntriesByMonth.map((entry, index) => (
-            <tr key={index}>
-              <td className="border border-gray-300 p-2">{entry.date}</td>
-              <td className="border border-gray-300 p-2">
-                {entry.medications.join(", ")}
-              </td>
-              <td className="border border-gray-300 p-2">
-                {entry.severity.nase}
-              </td>
-              <td className="border border-gray-300 p-2">
-                {entry.severity.augen}
-              </td>
-              <td className="border border-gray-300 p-2">
-                {entry.severity.lunge}
-              </td>
-              <td className="border border-gray-300 p-2">
-                {entry.severity.haut}
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
 
       {/* Monthly Analysis Summary */}
       {summary && (
@@ -193,6 +227,22 @@ export default function AllergyJournal() {
             <li>Lunge: {summary.lunge}</li>
             <li>Haut: {summary.haut}</li>
           </ul>
+
+          {/* Export and Share Options */}
+          <div className="mt-4 flex space-x-4">
+            <button
+              onClick={exportCSV}
+              className="p-2 bg-green-500 text-white rounded"
+            >
+              Export as CSV
+            </button>
+            <button
+              onClick={exportPDF}
+              className="p-2 bg-blue-500 text-white rounded"
+            >
+              Export as PDF
+            </button>
+          </div>
         </div>
       )}
     </div>
