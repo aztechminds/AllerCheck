@@ -100,14 +100,6 @@ export default function AllergyJournal() {
     doc.save(`Allergy_Summary_${selectedMonth}.pdf`);
   };
 
-  // Simple share functionality (copy to clipboard)
-  const shareSummary = () => {
-    const summaryText = `Allergy Summary for ${selectedMonth}\nNase: ${summary.nase}\nAugen: ${summary.augen}\nLunge: ${summary.lunge}\nHaut: ${summary.haut}`;
-    navigator.clipboard.writeText(summaryText).then(() => {
-      alert("Summary copied to clipboard!");
-    });
-  };
-
   return (
     <div className="p-4">
       <h2 className="text-xl font-bold mb-6 text-center">Allergy Journal</h2>
