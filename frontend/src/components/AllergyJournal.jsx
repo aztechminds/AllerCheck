@@ -1,7 +1,7 @@
 import { useState } from "react";
 
 export default function AllergyJournal() {
-  const [medications, setMedications] = useState("");
+  const [medications, setMedications] = useState([]);
   const [journalEntries, setJournalEntries] = useState([]);
   const [severity, setSeverity] = useState({
     nase: "",
@@ -20,9 +20,37 @@ export default function AllergyJournal() {
 
     setJournalEntries([newEntry, ...journalEntries]);
 
-    setMedications("");
+    setMedications([]);
     setSeverity({ nase: "", augen: "", lunge: "", haut: "" });
   };
+
+  const handleMedicationChange = (e) => {
+    const selectedOptions = Array.from(e.target.selectedOptions, (option) => option.value);
+    setMedications(selectedOptions);
+  };
+
+  const calculateSummary = () => {
+    if (journalEntries.length === 0) return null;
+
+    let totalSeverity = { nase: 0, augen: 0, lunge: 0, haut: 0 };
+    let count = 0;
+
+    journalEntries.forEach((entry) => {
+      Object.keys(entry.severity).forEach((key) => {
+        totalSeverity[key] += Number(entry.severity[key]);
+      });
+      count++;
+    });
+
+    return {
+      nase: (totalSeverity.nase / count).toFixed(1),
+      augen: (totalSeverity.augen / count).toFixed(1),
+      lunge: (totalSeverity.lunge / count).toFixed(1),
+      haut: (totalSeverity.haut / count).toFixed(1),
+    };
+  };
+
+  const summary = calculateSummary();
 
   return (
     <div className="p-4">
@@ -30,7 +58,6 @@ export default function AllergyJournal() {
 
       <form onSubmit={handleSubmit} className="space-y-4 mb-6">
         <div className="mb-6">
-          {/* <h3 className="text-lg font-semibold">Severity Summary</h3> */}
           {["nase", "augen", "lunge", "haut"].map((key) => (
             <div key={key} className="mb-2">
               <label className="block capitalize">{key} (0-3):</label>
@@ -54,16 +81,17 @@ export default function AllergyJournal() {
         <div>
           <label className="block font-semibold">Medications Taken:</label>
           <select
+            multiple
             value={medications}
-            onChange={(e) => setMedications(e.target.value)}
+            onChange={handleMedicationChange}
             className="p-2 border rounded w-full"
           >
-            <option value="">Select Medication</option>
             <option value="Antihistamine">Antihistamine</option>
             <option value="Nasal Spray">Nasal Spray</option>
             <option value="Inhaler">Inhaler</option>
             <option value="Eye Drops">Eye Drops</option>
           </select>
+          <p className="text-sm text-gray-500">Hold Ctrl (Windows) or Command (Mac) to select multiple.</p>
         </div>
 
         <button
@@ -89,25 +117,28 @@ export default function AllergyJournal() {
           {journalEntries.map((entry, index) => (
             <tr key={index}>
               <td className="border border-gray-300 p-2">{entry.date}</td>
-              <td className="border border-gray-300 p-2">
-                {entry.medications}
-              </td>
-              <td className="border border-gray-300 p-2">
-                {entry.severity.nase}
-              </td>
-              <td className="border border-gray-300 p-2">
-                {entry.severity.augen}
-              </td>
-              <td className="border border-gray-300 p-2">
-                {entry.severity.lunge}
-              </td>
-              <td className="border border-gray-300 p-2">
-                {entry.severity.haut}
-              </td>
+              <td className="border border-gray-300 p-2">{entry.medications.join(", ")}</td>
+              <td className="border border-gray-300 p-2">{entry.severity.nase}</td>
+              <td className="border border-gray-300 p-2">{entry.severity.augen}</td>
+              <td className="border border-gray-300 p-2">{entry.severity.lunge}</td>
+              <td className="border border-gray-300 p-2">{entry.severity.haut}</td>
             </tr>
           ))}
         </tbody>
       </table>
+
+      {summary && (
+        <div className="mt-6 p-4 bg-gray-100 rounded-md">
+          <h3 className="text-lg font-bold mb-2">Analysis Summary</h3>
+          <p><strong>Average Severity:</strong></p>
+          <ul>
+            <li>Nase: {summary.nase}</li>
+            <li>Augen: {summary.augen}</li>
+            <li>Lunge: {summary.lunge}</li>
+            <li>Haut: {summary.haut}</li>
+          </ul>
+        </div>
+      )}
     </div>
   );
 }
